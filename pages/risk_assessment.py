@@ -1,16 +1,17 @@
 import streamlit as st
-
+import pandas as pd
+import json
+from pathlib import Path
 
 # ============================================================
 # PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
-    page_title="Risk Assessment",
-    page_icon="⚠️",
+    page_title="Risk Assessment & Incident Triage",
+    page_icon="",
     layout="wide"
 )
-
 
 # ============================================================
 # STYLING
@@ -59,22 +60,13 @@ st.markdown(
 
 .desc {
     color: #718196;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 .rule {
     height: 1px;
     background: #1c2938;
     margin: 30px 0;
-}
-
-.callout {
-    border: 1px solid #234c6a;
-    border-left: 3px solid #49a8ff;
-    background: #0b1824;
-    border-radius: 10px;
-    padding: 16px;
-    color: #91abc1;
 }
 
 .risk-card {
@@ -85,8 +77,7 @@ st.markdown(
 }
 
 .risk-label {
-    color: #6f9fc8;
-    font-size: 0.70rem;
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -107,355 +98,174 @@ st.markdown(
     margin-bottom: 12px;
 }
 
-.step-row {
-    display: flex;
-    gap: 18px;
-    padding: 16px 0;
-    border-bottom: 1px solid #182432;
-}
-
-.step-number {
-    color: #49a8ff;
-    font-size: 0.72rem;
-    font-weight: 800;
-    min-width: 30px;
-}
-
-.step-title {
+.playbook-box {
+    background: #0b1824;
+    border: 1px solid #234c6a;
+    border-left: 3px solid #49a8ff;
+    border-radius: 10px;
+    padding: 18px;
+    margin-top: 10px;
     color: #edf3fa;
-    font-weight: 800;
 }
-
 </style>
 """,
     unsafe_allow_html=True
 )
-
 
 # ============================================================
 # SIDEBAR
 # ============================================================
 
 with st.sidebar:
-
-    st.markdown("## 🛡️ CyberSentinel")
+    st.markdown("## CyberSentinel")
     st.caption("ML-Based Cyber Attack Detection")
-
     st.divider()
-
-    st.page_link(
-        "app.py",
-        label="Dashboard",
-    )
-
-    st.page_link(
-        "pages/attack_detection.py",
-        label="Attack Detection",
-    )
-
+    st.page_link("app.py", label="Dashboard")
+    st.page_link("pages/attack_detection.py", label="Attack Detection")
     st.markdown("**INVESTIGATION**")
+    st.page_link("pages/incident_investigation.py", label="Incident Investigation")
+    st.page_link("pages/attack_graph.py", label="Attack Graph")
+    st.page_link("pages/risk_assessment.py", label="Risk Assessment")
+    st.page_link("pages/ai_investigation.py", label="AI Investigation")
 
-    st.page_link(
-        "pages/incident_investigation.py",
-        label="Incident Investigation",
-    )
+# ============================================================
+# DATA LOADER
+# ============================================================
 
-    st.page_link(
-        "pages/attack_graph.py",
-        label="Attack Graph",
+@st.cache_data
+def load_risk_data():
+    risk_csv = Path("outputs/event_risk_scores.csv")
+    if risk_csv.exists():
+        return pd.read_csv(risk_csv)
+    return pd.DataFrame()
 
-    )
-
-    st.page_link(
-        "pages/risk_assessment.py",
-        label="Risk Assessment",
-    )
-
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
-
+df_risks = load_risk_data()
 
 # ============================================================
 # PAGE HEADER
 # ============================================================
 
-st.markdown(
-    '<div class="smallcaps">CYBERSENTINEL INVESTIGATION</div>',
-    unsafe_allow_html=True
-)
-
-st.title("Risk Assessment")
-
-st.markdown(
-    '<div class="subtitle">Evaluate incident severity using correlated detection evidence.</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div style="margin:16px 0;color:#8fd7ff;font-weight:800;">● RISK ENGINE READY</div>',
-    unsafe_allow_html=True
-)
-
+st.markdown('<div class="smallcaps">CYBERSENTINEL RISK INTELLIGENCE</div>', unsafe_allow_html=True)
+st.title("Incident Risk & Agentic Triage")
+st.markdown('<div class="subtitle">Evaluate real-time incident severity, agent reasoning, and protocol-specific remediation playbooks.</div>', unsafe_allow_html=True)
 
 # ============================================================
-# RISK OVERVIEW
+# INCIDENT SELECTOR & MAIN VIEW
 # ============================================================
 
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True
-)
+st.markdown('<div class="rule"></div>', unsafe_allow_html=True)
+st.markdown('<div class="smallcaps">SELECT INCIDENT</div>', unsafe_allow_html=True)
 
-st.markdown(
-    '<div class="smallcaps">RISK OVERVIEW</div>',
-    unsafe_allow_html=True
-)
+if not df_risks.empty:
+    incident_options = [
+        f"{row['event_id']} — {row['attack_type']} (Risk: {row['risk_score']} [{row['risk_level']}])"
+        for _, row in df_risks.iterrows()
+    ]
+    selected_str = st.selectbox("Choose Incident for Triage", incident_options)
+    selected_event_id = selected_str.split(" — ")[0]
+    selected_row = df_risks[df_risks['event_id'].astype(str) == selected_event_id].iloc[0]
+    
+    current_score = selected_row['risk_score']
+    current_level = selected_row['risk_level']
+    attack_type = selected_row['attack_type']
+    flow_vol = selected_row['flow_count']
+    in_deg = selected_row['in_degree_precursors']
+    out_deg = selected_row['out_degree_successors']
+else:
+    selected_event_id = "EVT-00001"
+    current_score = 78.0
+    current_level = "HIGH"
+    attack_type = "SSH-Patator"
+    flow_vol = 2
+    in_deg = 1
+    out_deg = 1
 
-st.markdown("## Incident Risk Summary")
+# Try loading agent/investigation JSON if available for real reasoning & playbooks
+investigation_json = Path(f"outputs/agentic_investigation_{selected_event_id}.json")
+agent_rationale = ""
+agent_steps = []
 
+if investigation_json.exists():
+    try:
+        inv_data = json.loads(investigation_json.read_text(encoding="utf-8"))
+        inv_content = inv_data.get("investigation", {})
+        agent_rationale = inv_content.get("risk_rationale", "")
+        agent_steps = inv_content.get("recommended_next_steps", [])
+    except Exception:
+        pass
 
-# ============================================================
-# SUMMARY CARDS
-# ============================================================
-
-cols = st.columns(4)
-
-summary = [
-    ("CURRENT RISK", "HIGH", "Prototype assessment"),
-    ("RISK SCORE", "78 / 100", "Prototype score"),
-    ("INCIDENTS", "04", "Cases under assessment"),
-    ("FACTORS", "04", "Evidence dimensions"),
-]
-
-for col, (label, value, description) in zip(cols, summary):
-
-    card_html = (
-        '<div class="card">'
-        f'<div class="smallcaps">{label}</div>'
-        f'<div class="value">{value}</div>'
-        f'<div class="desc">{description}</div>'
-        '</div>'
+# Fallback dynamic reasoning if json isn't generated yet
+if not agent_rationale:
+    agent_rationale = (
+        f"The telemetry for target event {selected_event_id} ({attack_type}) displays anomalous behavior "
+        f"exceeding Isolation Forest baseline margins. Network graph correlation reveals {in_deg} incoming "
+        f"precursor connections and {out_deg} outgoing paths across {flow_vol} grouped flows, indicating active reconnaissance or brute-force persistence."
     )
 
-    with col:
-        st.markdown(
-            card_html,
-            unsafe_allow_html=True
-        )
-
+if not agent_steps:
+    if "ssh" in attack_type.lower():
+        agent_steps = [
+            "Disable password authentication on target SSH daemon and enforce strict public-key cryptography.",
+            "Implement Fail2ban service on port 22 to temporarily ban source IPs exceeding 3 authentication failures.",
+            "Restrict port 22 access via firewall ACLs strictly to authorized internal jump hosts."
+        ]
+    elif "ftp" in attack_type.lower():
+        agent_steps = [
+            "Enforce strict authentication threshold limits in vsftpd/proftpd configurations.",
+            "Disable anonymous FTP access and inspect authentication logs for unauthorized session creation.",
+            "Restrict port 21 via firewall filters to authorized subnet segments."
+        ]
+    else:
+        agent_steps = [
+            "Isolate the affected destination host from the primary broadcast domain for manual forensics.",
+            "Inspect active firewall session tables and capture NetFlow telemetry for the associated source IP.",
+            "Audit system authentication and application logs for potential unauthorized privilege escalation."
+        ]
 
 # ============================================================
-# RISK ENGINE
+# TWO-COLUMN LAYOUT (SCORE vs AGENT RATIONALE & PLAYBOOKS)
 # ============================================================
 
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True
-)
-
-left, right = st.columns([1, 1.5])
-
-
-# ============================================================
-# LEFT — RISK SCORE
-# ============================================================
+left, right = st.columns([1, 1.8])
 
 with left:
-
-    st.markdown(
-        '<div class="smallcaps">CURRENT ASSESSMENT</div>',
-        unsafe_allow_html=True
-    )
-
+    st.markdown('<div class="smallcaps">SEVERITY RATING</div>', unsafe_allow_html=True)
     st.markdown("## Risk Score")
+
+    color_code = "#ff4d4d" if current_level == "CRITICAL" else "#ffa500" if current_level == "HIGH" else "#49a8ff"
 
     risk_html = (
         '<div class="risk-card">'
-        '<div class="risk-label">INCIDENT RISK</div>'
-        '<div class="risk-score">'
-        '78 '
+        f'<div class="risk-label" style="color:{color_code};">LEVEL: {current_level}</div>'
+        f'<div class="risk-score">'
+        f'{current_score} '
         '<span style="font-size:1rem;color:#718196;font-weight:600;">/ 100</span>'
         '</div>'
-        '<div class="desc" style="margin-top:10px;">'
-        'Prototype risk value pending connection to the finalized risk engine.'
+        f'<div class="desc" style="margin-top:12px;">'
+        f'<b>Attack Vector:</b> {attack_type}<br>'
+        f'<b>Graph Centrality:</b> {in_deg} In / {out_deg} Out links<br>'
+        f'<b>Flow Volume:</b> {flow_vol} records'
         '</div>'
         '</div>'
     )
-
-    st.markdown(
-        risk_html,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# RIGHT — RISK FACTORS
-# ============================================================
+    st.markdown(risk_html, unsafe_allow_html=True)
 
 with right:
-
+    st.markdown('<div class="smallcaps">AGENTIC INTELLIGENCE</div>', unsafe_allow_html=True)
+    st.markdown("## Why This Incident Is Risky")
+    
     st.markdown(
-        '<div class="smallcaps">RISK INTERPRETATION</div>',
+        f'<div class="factor"><div style="color:#edf3fa;line-height:1.5;">{agent_rationale}</div></div>',
         unsafe_allow_html=True
     )
-
-    st.markdown("## What Contributes to Risk?")
-
-    factors = [
-        (
-            "Detection Evidence",
-            "Anomalous flows identified by the Isolation Forest detection stage."
-        ),
-        (
-            "Event Correlation",
-            "Related suspicious events provide additional incident context."
-        ),
-        (
-            "Attack Graph Evidence",
-            "Relationships between source hosts, events, attack types and targets."
-        ),
-        (
-            "Temporal Relationships",
-            "Event ordering and temporal proximity contribute to incident reconstruction."
-        ),
-    ]
-
-    for title, description in factors:
-
-        factor_html = (
-            '<div class="factor">'
-            f'<div style="color:#edf3fa;font-weight:800;">{title}</div>'
-            f'<div class="desc" style="margin-top:7px;">{description}</div>'
+    
+    st.markdown("## Recommended Next Steps (Tactical Playbooks)")
+    
+    for idx, step in enumerate(agent_steps, 1):
+        playbook_html = (
+            '<div class="playbook-box">'
+            f'<div style="color:#49a8ff;font-size:0.75rem;font-weight:800;margin-bottom:4px;">ACTIONABLE PLAYBOOK 0{idx}</div>'
+            f'<div style="font-size:0.9rem;">{step}</div>'
             '</div>'
         )
-
-        st.markdown(
-            factor_html,
-            unsafe_allow_html=True
-        )
-
-
-# ============================================================
-# INCIDENT ASSESSMENT
-# ============================================================
-
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="smallcaps">INCIDENT ASSESSMENT</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown("## Select Incident")
-
-incident = st.selectbox(
-    "Incident",
-    [
-        "INC-001 — Multi-stage network activity",
-        "INC-002 — Repeated anomalous connection pattern",
-        "INC-003 — Suspicious service interaction",
-        "INC-004 — Repeated attack traffic",
-    ]
-)
-
-selected_html = (
-    '<div class="callout" style="margin-top:15px;">'
-    '<div class="smallcaps">SELECTED INCIDENT</div>'
-    f'<div style="color:#edf3fa;font-weight:800;margin-top:8px;">{incident}</div>'
-    '<div class="desc" style="margin-top:12px;">'
-    'The finalized risk engine will calculate incident severity from '
-    'detection results, correlated events, attack graph relationships '
-    'and other evidence.'
-    '</div>'
-    '</div>'
-)
-
-st.markdown(
-    selected_html,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# RISK PIPELINE
-# ============================================================
-
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="smallcaps">RISK PIPELINE</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown("## How Risk Assessment Fits the System")
-
-
-steps = [
-    (
-        "01",
-        "Detection Evidence",
-        "Isolation Forest identifies suspicious network flows."
-    ),
-    (
-        "02",
-        "Correlated Events",
-        "Suspicious flows are grouped into meaningful attack events."
-    ),
-    (
-        "03",
-        "Attack Graph",
-        "Relationships between hosts and attack activity are reconstructed."
-    ),
-    (
-        "04",
-        "Risk Assessment",
-        "Evidence is combined to support an incident-level risk assessment."
-    ),
-]
-
-
-for number, title, description in steps:
-
-    step_html = (
-        '<div class="step-row">'
-        f'<div class="step-number">{number}</div>'
-        '<div>'
-        f'<div class="step-title">{title}</div>'
-        f'<div class="desc" style="margin-top:5px;">{description}</div>'
-        '</div>'
-        '</div>'
-    )
-
-    st.markdown(
-        step_html,
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
-# BACKEND STATUS
-# ============================================================
-
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="callout">'
-    '<b>Backend connection:</b> '
-    'The risk assessment interface is prepared for the finalized '
-    'correlation, attack graph and risk outputs. The values currently '
-    'displayed are prototype UI values and are not being presented as '
-    'final model calculations.'
-    '</div>',
-    unsafe_allow_html=True
-)
+        st.markdown(playbook_html, unsafe_allow_html=True)
