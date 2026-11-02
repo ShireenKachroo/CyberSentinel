@@ -6,6 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # ============================================================
 # PAGE CONFIG
@@ -13,7 +16,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="CyberSentinel | SOC",
-    page_icon="🛡️",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -384,7 +387,7 @@ with st.sidebar:
 
     st.markdown(
         '<div class="smallcaps" style="margin-top:18px">'
-        'Future Modules</div>',
+        'Agentic Investigation & Risk Assessment </div>',
         unsafe_allow_html=True,
     )
 
@@ -393,10 +396,10 @@ with st.sidebar:
         label="Risk Assessment",
     )
 
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    # st.page_link(
+    #     "pages/ai_investigation.py",
+    #     label="AI Investigation",
+    # )
 
     st.divider()
 

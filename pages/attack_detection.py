@@ -329,8 +329,8 @@ with st.sidebar:
     )
 
     st.markdown(
-        '<div class="smallcaps" '
-        'style="margin-top:18px">Future Modules</div>',
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Agentic Investigation & Risk Assessment </div>',
         unsafe_allow_html=True,
     )
 
@@ -339,10 +339,10 @@ with st.sidebar:
         label="Risk Assessment",
     )
 
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    # st.page_link(
+    #     "pages/ai_investigation.py",
+    #     label="AI Investigation",
+    # )
 
     st.divider()
 

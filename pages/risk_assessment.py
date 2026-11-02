@@ -202,9 +202,13 @@ with st.sidebar:
     st.page_link("pages/incident_investigation.py", label="Incident Investigation")
     st.page_link("pages/attack_graph.py", label="Attack Graph")
 
-    st.markdown('<div class="smallcaps" style="margin-top:18px">Future Modules</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Agentic Investigation & Risk Assessment </div>',
+        unsafe_allow_html=True,
+    )
     st.page_link("pages/risk_assessment.py", label="Risk Assessment")
-    st.page_link("pages/ai_investigation.py", label="AI Investigation")
+    # st.page_link("pages/ai_investigation.py", label="AI Investigation")
 
     st.divider()
 
