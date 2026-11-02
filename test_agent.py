@@ -32,12 +32,12 @@ def test_investigation():
     
     events_path = Path("outputs/attack_events.csv")
     if not events_path.exists():
-        print(f"❌ Error: Could not find {events_path}.")
+        print(f"Error: Could not find {events_path}.")
         return
     
     df = pd.read_csv(events_path)
     sample_event_id = str(df.iloc[0]['event_id'])
-    print(f"🎯 Selected sample Event ID for investigation: {sample_event_id}")
+    print(f"Selected sample Event ID for investigation: {sample_event_id}")
 
     graph = create_investigation_graph()
 
@@ -53,7 +53,7 @@ def test_investigation():
         "final_report": None
     }
 
-    print("\n🚀 Starting agentic multi-step investigation loop...")
+    print("\nStarting agentic multi-step investigation loop...")
     print("-" * 60)
 
     #recursion_limit set karne se agar loop fassa bhi toh 15 steps mein ruk jayega
@@ -66,12 +66,12 @@ def test_investigation():
                 for msg in output["messages"]:
                     if hasattr(msg, "tool_calls") and msg.tool_calls:
                         for tc in msg.tool_calls:
-                            print(f"  🔧 Agent calling tool: '{tc['name']}' with args: {tc['args']}")
+                            print(f"Agent calling tool: '{tc['name']}' with args: {tc['args']}")
                     elif hasattr(msg, "content") and msg.content:
-                        print(f"  💬 LLM Output / Summary:\n{msg.content}")
+                        print(f"LLM Output / Summary:\n{msg.content}")
 
     print("\n" + "=" * 60)
-    print("✅ Investigation test finished successfully!")
+    print("Investigation test finished successfully!")
 
 if __name__ == "__main__":
     test_investigation()
