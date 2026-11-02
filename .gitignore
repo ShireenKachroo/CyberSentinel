@@ -8,3 +8,5 @@ __pycache__/
 
 # Environment Variables & API Keys (Security ke liye)
 .env
+agentic_investigation_output/
+agentic.py
