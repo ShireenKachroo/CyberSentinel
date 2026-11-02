@@ -1,112 +1,70 @@
+# agentic investigation report + risk assessment:
+
 import streamlit as st
 import pandas as pd
 import json
 from pathlib import Path
+from langchain_core.messages import HumanMessage
+from agent.workflow import create_investigation_graph
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Map GEMINI_API_KEY to GOOGLE_API_KEY if needed by LangChain
+if os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
+    os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
 
 # ============================================================
 # PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
-    page_title="Risk Assessment & Incident Triage",
+    page_title="CyberSentinel",
     page_icon="",
     layout="wide"
 )
 
 # ============================================================
-# STYLING
+# ENTERPRISE STYLING
 # ============================================================
 
 st.markdown(
     """
 <style>
 .stApp {
-    background: #070b11;
-    color: #edf3fa;
+    background: #06090f;
+    color: #e2e8f0;
 }
 
 .block-container {
-    max-width: 1500px;
-    padding-top: 2rem;
+    max-width: 1550px;
+    padding-top: 1.5rem;
     padding-bottom: 4rem;
 }
 
-.smallcaps {
-    color: #6f9fc8;
-    font-size: 0.70rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-}
-
-.subtitle {
-    color: #8190a3;
-    font-size: 1rem;
-}
-
-.card {
-    background: #0e1722;
-    border: 1px solid #26374b;
-    border-radius: 14px;
-    padding: 20px;
-    min-height: 150px;
-}
-
-.value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin: 8px 0;
-}
-
-.desc {
-    color: #718196;
-    font-size: 0.85rem;
-}
-
-.rule {
-    height: 1px;
-    background: #1c2938;
-    margin: 30px 0;
-}
-
-.risk-card {
-    background: #0e1722;
-    border: 1px solid #26374b;
-    border-radius: 14px;
-    padding: 24px;
-}
-
-.risk-label {
+.section-title {
+    color: #38bdf8;
     font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    margin-bottom: 0.5rem;
 }
 
-.risk-score {
-    color: #edf3fa;
-    font-size: 3rem;
-    font-weight: 850;
-    margin-top: 8px;
-}
-
-.factor {
-    background: #0b121b;
-    border: 1px solid #1d2b3a;
+.metric-card {
+    background: #0d1521;
+    border: 1px solid #1e293b;
     border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 12px;
+    padding: 16px;
+    text-align: center;
 }
 
-.playbook-box {
-    background: #0b1824;
-    border: 1px solid #234c6a;
-    border-left: 3px solid #49a8ff;
-    border-radius: 10px;
-    padding: 18px;
-    margin-top: 10px;
-    color: #edf3fa;
-}
+.badge-critical { background: #7f1d1d; color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+.badge-high { background: #78350f; color: #fde68a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+.badge-medium { background: #1e3a8a; color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+.badge-low { background: #064e3b; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
 </style>
 """,
     unsafe_allow_html=True
@@ -117,16 +75,90 @@ st.markdown(
 # ============================================================
 
 with st.sidebar:
-    st.markdown("## CyberSentinel")
+
+    st.markdown("## 🛡️ CyberSentinel")
     st.caption("ML-Based Cyber Attack Detection")
+
     st.divider()
-    st.page_link("app.py", label="Dashboard")
-    st.page_link("pages/attack_detection.py", label="Attack Detection")
-    st.markdown("**INVESTIGATION**")
-    st.page_link("pages/incident_investigation.py", label="Incident Investigation")
-    st.page_link("pages/attack_graph.py", label="Attack Graph")
-    st.page_link("pages/risk_assessment.py", label="Risk Assessment")
-    st.page_link("pages/ai_investigation.py", label="AI Investigation")
+
+    st.markdown(
+        '<div class="smallcaps">Overview</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.page_link(
+        "app.py",
+        label="Dashboard",
+    )
+
+    st.markdown(
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Detection</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.page_link(
+        "pages/attack_detection.py",
+        label="Attack Detection",
+        
+    )
+
+    st.markdown(
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Investigation</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.page_link(
+        "pages/incident_investigation.py",
+        label="Incident Investigation",
+    )
+
+    st.page_link(
+        "pages/attack_graph.py",
+        label="Attack Graph",
+    )
+
+    st.markdown(
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Future Modules</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.page_link(
+        "pages/risk_assessment.py",
+        label="Risk Assessment",
+    )
+
+    st.page_link(
+        "pages/ai_investigation.py",
+        label="AI Investigation",
+    )
+
+    st.divider()
+
+    # FIXED: use st.html instead of indented markdown HTML
+    st.html(
+        f"""
+        <div class="card"
+             style="min-height:0;padding:13px">
+
+            <div class="green"
+                 style="font-weight:800;font-size:.76rem">
+                ● SYSTEM ONLINE
+            </div>
+
+            <div style="
+                color:#718196;
+                font-size:.7rem;
+                margin-top:6px;
+            ">
+                CICIDS2017 · {total_flows:,} flows
+            </div>
+
+        </div>
+        """
+    )
 
 # ============================================================
 # DATA LOADER
@@ -142,130 +174,212 @@ def load_risk_data():
 df_risks = load_risk_data()
 
 # ============================================================
-# PAGE HEADER
+# HEADER & INCIDENT SELECTOR
 # ============================================================
 
-st.markdown('<div class="smallcaps">CYBERSENTINEL RISK INTELLIGENCE</div>', unsafe_allow_html=True)
-st.title("Incident Risk & Agentic Triage")
-st.markdown('<div class="subtitle">Evaluate real-time incident severity, agent reasoning, and protocol-specific remediation playbooks.</div>', unsafe_allow_html=True)
-
-# ============================================================
-# INCIDENT SELECTOR & MAIN VIEW
-# ============================================================
-
-st.markdown('<div class="rule"></div>', unsafe_allow_html=True)
-st.markdown('<div class="smallcaps">SELECT INCIDENT</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">ENTERPRISE SOAR COMMAND CENTER</div>', unsafe_allow_html=True)
+st.title("Incident Triage, Risk Analysis & AI Investigation")
+st.markdown("Inspect deterministic risk scores, trigger autonomous multi-step AI investigations, execute SOAR playbooks, and export SOC reports from a single console.")
 
 if not df_risks.empty:
-    incident_options = [
-        f"{row['event_id']} — {row['attack_type']} (Risk: {row['risk_score']} [{row['risk_level']}])"
-        for _, row in df_risks.iterrows()
-    ]
-    selected_str = st.selectbox("Choose Incident for Triage", incident_options)
-    selected_event_id = selected_str.split(" — ")[0]
-    selected_row = df_risks[df_risks['event_id'].astype(str) == selected_event_id].iloc[0]
+    col_sel1, col_sel2 = st.columns([3, 1])
+    with col_sel1:
+        incident_options = [
+            f"{row['event_id']} — {row['attack_type']} (Risk Score: {row['risk_score']} [{row['risk_level']}])"
+            for _, row in df_risks.iterrows()
+        ]
+        selected_str = st.selectbox("Select Active Incident for Triage & Investigation", incident_options)
+        selected_event_id = selected_str.split(" — ")[0]
+        selected_row = df_risks[df_risks['event_id'].astype(str) == selected_event_id].iloc[0]
     
-    current_score = selected_row['risk_score']
-    current_level = selected_row['risk_level']
-    attack_type = selected_row['attack_type']
-    flow_vol = selected_row['flow_count']
-    in_deg = selected_row['in_degree_precursors']
-    out_deg = selected_row['out_degree_successors']
+    with col_sel2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        level_class = f"badge-{selected_row['risk_level'].lower()}"
+        st.markdown(f"**Severity Band:** <span class='{level_class}'>{selected_row['risk_level']}</span>", unsafe_allow_html=True)
 else:
-    selected_event_id = "EVT-00001"
-    current_score = 78.0
-    current_level = "HIGH"
-    attack_type = "SSH-Patator"
-    flow_vol = 2
-    in_deg = 1
-    out_deg = 1
+    st.warning("No risk scores found. Run `risk_analyzer.py` first.")
+    st.stop()
 
-# Try loading agent/investigation JSON if available for real reasoning & playbooks
+st.divider()
+
+# ============================================================
+# INCIDENT METRICS
+# ============================================================
+
+score = selected_row['risk_score']
+level = selected_row['risk_level']
+attack_type = selected_row['attack_type']
+flow_count = selected_row.get('flow_count', 1)
+in_deg = selected_row.get('in_degree', 0)
+out_deg = selected_row.get('out_degree', 0)
+
+factor_a = selected_row.get('anomaly_severity_factor', 50.0)
+factor_b = selected_row.get('frequency_factor', 30.0)
+factor_h = selected_row.get('host_involvement_factor', 40.0)
+factor_t = selected_row.get('temporal_correlation_factor', 20.0)
+factor_c = selected_row.get('attack_category_factor', 60.0)
+
+# Check if AI report JSON exists
 investigation_json = Path(f"outputs/agentic_investigation_{selected_event_id}.json")
-agent_rationale = ""
-agent_steps = []
-
+report_content = ""
 if investigation_json.exists():
     try:
         inv_data = json.loads(investigation_json.read_text(encoding="utf-8"))
-        inv_content = inv_data.get("investigation", {})
-        agent_rationale = inv_content.get("risk_rationale", "")
-        agent_steps = inv_content.get("recommended_next_steps", [])
+        report_content = inv_data.get("report", "")
     except Exception:
         pass
 
-# Fallback dynamic reasoning if json isn't generated yet
-if not agent_rationale:
-    agent_rationale = (
-        f"The telemetry for target event {selected_event_id} ({attack_type}) displays anomalous behavior "
-        f"exceeding Isolation Forest baseline margins. Network graph correlation reveals {in_deg} incoming "
-        f"precursor connections and {out_deg} outgoing paths across {flow_vol} grouped flows, indicating active reconnaissance or brute-force persistence."
-    )
+# ============================================================
+# UNIFIED TABS
+# ============================================================
 
-if not agent_steps:
+tab1, tab2, tab3 = st.tabs([
+    "AI Investigator", 
+    "Risk Analysis", 
+    "Interactive SOAR Playbooks"
+])
+
+with tab1:
+    st.markdown(f"### Autonomous Investigation Report for `{selected_event_id}` ({attack_type})")
+    st.markdown("Generated dynamically by the LangGraph multi-step agent using Gemini API and specialized SOC tools.")
+    
+    col_run, col_status = st.columns([1, 2])
+    with col_run:
+        if st.button(f"Trigger AI Investigation for {selected_event_id}", type="primary"):
+            with st.spinner(f"Agent running multi-step tool calls for {selected_event_id}... Please wait."):
+                try:
+                    graph = create_investigation_graph()
+                    initial_state = {
+                        "event_id": selected_event_id,
+                        "target_ip": None,
+                        "messages": [
+                            HumanMessage(content=f"Investigate event ID {selected_event_id}. Use your tools to fetch details, check related events, and provide a final summary report.")
+                        ],
+                        "investigation_steps": [],
+                        "retrieved_evidence": {},
+                        "investigation_complete": False,
+                        "final_report": None
+                    }
+                    
+                    last_content = ""
+                    for step in graph.stream(initial_state, config={"recursion_limit": 15}, stream_mode="updates"):
+                        for _, output in step.items():
+                            if "messages" in output:
+                                for msg in output["messages"]:
+                                    if hasattr(msg, "content") and msg.content and len(msg.content) > 100:
+                                        last_content = msg.content
+                    
+                    if last_content:
+                        report_content = last_content
+                        output_dir = Path("outputs")
+                        output_dir.mkdir(parents=True, exist_ok=True)
+                        
+                        # Save JSON & MD
+                        Path(f"outputs/agentic_investigation_{selected_event_id}.json").write_text(
+                            json.dumps({"event_id": selected_event_id, "report": report_content}, indent=2), encoding="utf-8"
+                        )
+                        Path(f"outputs/agentic_investigation_{selected_event_id}.md").write_text(report_content, encoding="utf-8")
+                        st.success("Investigation complete and report generated successfully!")
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Error running investigation agent: {e}")
+    
+    with col_status:
+        if report_content:
+            st.success("Status: Investigation report available in cache.")
+        else:
+            st.warning("Click the button to run the AI agent & generate investigation report.")
+
+    st.divider()
+
+    if report_content:
+        st.markdown(report_content)
+        
+        st.markdown("### Export Report")
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            st.download_button(
+                label="Download Report as Markdown (.md)",
+                data=report_content,
+                file_name=f"soc_report_{selected_event_id}.md",
+                mime="text/markdown"
+            )
+        with col_d2:
+            st.download_button(
+                label="Download Report as JSON (.json)",
+                data=json.dumps({"event_id": selected_event_id, "report": report_content}, indent=2),
+                file_name=f"soc_report_{selected_event_id}.json",
+                mime="application/json"
+            )
+    else:
+        st.info("Click **'Trigger Live AI Investigation'** above to execute the agentic workflow and view the report.")
+
+with tab2:
+    st.markdown("### 5-Factor Deterministic Risk Engine Breakdown")
+    st.markdown("Quantitative scoring breakdown used to compute overall incident severity.")
+    
+    col_score, col_metrics = st.columns([1, 2])
+    
+    with col_score:
+        st.markdown(
+            f"""
+            <div class="metric-card" style="padding: 30px;">
+                <div style="font-size:0.8rem; color:#94a3b8; font-weight:700; text-transform:uppercase;">Composite Risk Score</div>
+                <div style="font-size: 3.5rem; font-weight: 900; color: #38bdf8; margin: 10px 0;">{score}</div>
+                <div style="font-size: 0.9rem; color: #cbd5e1;">Scale: 0 to 100 ({level})</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(f"<br><b>Attack Vector:</b> `{attack_type}`<br><b>Flow Volume:</b> `{flow_count}` records<br><b>Graph In/Out Degree:</b> `{in_deg}` / `{out_deg}` links", unsafe_allow_html=True)
+
+    with col_metrics:
+        st.markdown("**Factor Contribution Weights ($R = 0.30A + 0.20F + 0.15H + 0.20T + 0.15C$)**")
+        
+        st.markdown(f"1. **Anomaly Severity ($A$ - Isolation Forest)**: `{factor_a:.1f} / 100`")
+        st.progress(min(1.0, factor_a / 100.0))
+        
+        st.markdown(f"2. **Event Frequency ($F$ - Flow Volume)**: `{factor_b:.1f} / 100`")
+        st.progress(min(1.0, factor_b / 100.0))
+        
+        st.markdown(f"3. **Host Topological Spread ($H$ - NetworkX Degrees)**: `{factor_h:.1f} / 100`")
+        st.progress(min(1.0, factor_h / 100.0))
+        
+        st.markdown(f"4. **Temporal Correlation ($T$ - 300s Window Cluster)**: `{factor_t:.1f} / 100`")
+        st.progress(min(1.0, factor_t / 100.0))
+        
+        st.markdown(f"5. **Attack Baseline Weight ($C$ - Threat Category)**: `{factor_c:.1f} / 100`")
+        st.progress(min(1.0, factor_c / 100.0))
+
+with tab3:
+    st.markdown("### Interactive SOAR Containment Playbook")
+    st.markdown("Execute and track tactical mitigation steps for this incident directly from the triage console.")
+    
     if "ssh" in attack_type.lower():
-        agent_steps = [
-            "Disable password authentication on target SSH daemon and enforce strict public-key cryptography.",
-            "Implement Fail2ban service on port 22 to temporarily ban source IPs exceeding 3 authentication failures.",
-            "Restrict port 22 access via firewall ACLs strictly to authorized internal jump hosts."
+        steps = [
+            ("Block Source IP at Perimeter Firewall", "Add ingress drop rule for the malicious source IP in iptables / security groups."),
+            ("Disable Password Authentication", "Enforce strict public-key cryptography on the destination SSH daemon (`/etc/ssh/sshd_config`)."),
+            ("Deploy Fail2ban Defense", "Configure Fail2ban to temporarily ban IPs exceeding 3 failed login attempts on port 22."),
+            ("Audit System Auth Logs", "Inspect `/var/log/auth.log` around incident timestamp for successful unauthorized sessions.")
         ]
     elif "ftp" in attack_type.lower():
-        agent_steps = [
-            "Enforce strict authentication threshold limits in vsftpd/proftpd configurations.",
-            "Disable anonymous FTP access and inspect authentication logs for unauthorized session creation.",
-            "Restrict port 21 via firewall filters to authorized subnet segments."
+        steps = [
+            ("Enforce Rate Limiting on Port 21", "Restrict FTP concurrent connection thresholds in vsftpd service config."),
+            ("Disable Anonymous FTP Access", "Verify anonymous login is completely disabled across FTP server instances."),
+            ("Isolate Destination Segment", "Move destination host to an isolated VLAN pending forensic memory dump.")
         ]
     else:
-        agent_steps = [
-            "Isolate the affected destination host from the primary broadcast domain for manual forensics.",
-            "Inspect active firewall session tables and capture NetFlow telemetry for the associated source IP.",
-            "Audit system authentication and application logs for potential unauthorized privilege escalation."
+        steps = [
+            ("Isolate Affected Host", "Quarantine destination IP from the core internal broadcast domain."),
+            ("Capture NetFlow Forensic Dump", "Export PCAP packets for the offending time window for offline analysis."),
+            ("Review Privilege Escalation Logs", "Audit recent sudo and su commands executed on the target server.")
         ]
 
-# ============================================================
-# TWO-COLUMN LAYOUT (SCORE vs AGENT RATIONALE & PLAYBOOKS)
-# ============================================================
-
-left, right = st.columns([1, 1.8])
-
-with left:
-    st.markdown('<div class="smallcaps">SEVERITY RATING</div>', unsafe_allow_html=True)
-    st.markdown("## Risk Score")
-
-    color_code = "#ff4d4d" if current_level == "CRITICAL" else "#ffa500" if current_level == "HIGH" else "#49a8ff"
-
-    risk_html = (
-        '<div class="risk-card">'
-        f'<div class="risk-label" style="color:{color_code};">LEVEL: {current_level}</div>'
-        f'<div class="risk-score">'
-        f'{current_score} '
-        '<span style="font-size:1rem;color:#718196;font-weight:600;">/ 100</span>'
-        '</div>'
-        f'<div class="desc" style="margin-top:12px;">'
-        f'<b>Attack Vector:</b> {attack_type}<br>'
-        f'<b>Graph Centrality:</b> {in_deg} In / {out_deg} Out links<br>'
-        f'<b>Flow Volume:</b> {flow_vol} records'
-        '</div>'
-        '</div>'
-    )
-    st.markdown(risk_html, unsafe_allow_html=True)
-
-with right:
-    st.markdown('<div class="smallcaps">AGENTIC INTELLIGENCE</div>', unsafe_allow_html=True)
-    st.markdown("## Why This Incident Is Risky")
-    
-    st.markdown(
-        f'<div class="factor"><div style="color:#edf3fa;line-height:1.5;">{agent_rationale}</div></div>',
-        unsafe_allow_html=True
-    )
-    
-    st.markdown("## Recommended Next Steps (Tactical Playbooks)")
-    
-    for idx, step in enumerate(agent_steps, 1):
-        playbook_html = (
-            '<div class="playbook-box">'
-            f'<div style="color:#49a8ff;font-size:0.75rem;font-weight:800;margin-bottom:4px;">ACTIONABLE PLAYBOOK 0{idx}</div>'
-            f'<div style="font-size:0.9rem;">{step}</div>'
-            '</div>'
-        )
-        st.markdown(playbook_html, unsafe_allow_html=True)
+    for idx, (title, desc) in enumerate(steps, 1):
+        col_chk, col_desc = st.columns([0.05, 0.95])
+        with col_chk:
+            done = st.checkbox("", key=f"playbook_{selected_event_id}_{idx}")
+        with col_desc:
+            status_style = "text-decoration: line-through; color: #64748b;" if done else ""
+            st.markdown(f"<div style='{status_style}'><b>Step 0{idx}: {title}</b><br><span style='font-size:0.85rem; color:#94a3b8;'>{desc}</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
