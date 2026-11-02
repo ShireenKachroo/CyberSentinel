@@ -19,7 +19,7 @@ st.set_page_config(
 # ============================================================
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = ROOT / "attack_graph_output"
+OUTPUT_DIR = ROOT / "outputs"
 EVENTS_PATH = OUTPUT_DIR / "attack_events.csv"
 
 

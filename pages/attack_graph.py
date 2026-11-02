@@ -11,7 +11,7 @@ import streamlit as st
 # ============================================================
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = ROOT / "attack_graph_output"
+OUTPUT_DIR = ROOT / "outputs"
 
 GEXF_PATH = OUTPUT_DIR / "attack_graph.gexf"
 EVENTS_PATH = OUTPUT_DIR / "attack_events.csv"
