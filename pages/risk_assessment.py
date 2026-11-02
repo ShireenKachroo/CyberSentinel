@@ -1,9 +1,7 @@
-# agentic investigation report + risk assessment:
-
-import streamlit as st
+from pathlib import Path
 import pandas as pd
 import json
-from pathlib import Path
+import streamlit as st
 from langchain_core.messages import HumanMessage
 from agent.workflow import create_investigation_graph
 
@@ -21,165 +19,215 @@ if os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
 # ============================================================
 
 st.set_page_config(
-    page_title="CyberSentinel",
-    page_icon="",
-    layout="wide"
+    page_title="CyberSentinel | Risk Assessment",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ============================================================
-# ENTERPRISE STYLING
+# GLOBAL STYLING (Matching Dashboard)
 # ============================================================
 
 st.markdown(
     """
-<style>
-.stApp {
-    background: #06090f;
-    color: #e2e8f0;
-}
+    <style>
 
-.block-container {
-    max-width: 1550px;
-    padding-top: 1.5rem;
-    padding-bottom: 4rem;
-}
+    .stApp {
+        background: #070b11;
+        color: #edf3fa;
+    }
 
-.section-title {
-    color: #38bdf8;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-}
+    .block-container {
+        max-width: 1500px;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+    }
 
-.metric-card {
-    background: #0d1521;
-    border: 1px solid #1e293b;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-}
+    [data-testid="stSidebar"] {
+        background: #0b121c;
+        border-right: 1px solid #1d2b3c;
+    }
 
-.badge-critical { background: #7f1d1d; color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
-.badge-high { background: #78350f; color: #fde68a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
-.badge-medium { background: #1e3a8a; color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
-.badge-low { background: #064e3b; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
-</style>
-""",
-    unsafe_allow_html=True
+    .smallcaps {
+        color: #6f9fc8;
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+    }
+
+    .subtitle {
+        color: #8190a3;
+        font-size: .92rem;
+        margin-top: -.5rem;
+    }
+
+    .card {
+        background: linear-gradient(145deg, #0f1823, #0b121b);
+        border: 1px solid #26374b;
+        border-radius: 14px;
+        padding: 18px;
+        min-height: 112px;
+    }
+
+    .label {
+        color: #8190a3;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .value {
+        font-size: 1.65rem;
+        font-weight: 800;
+        margin-top: 7px;
+    }
+
+    .desc {
+        color: #718196;
+        font-size: .75rem;
+        margin-top: 5px;
+    }
+
+    .hero {
+        background:
+            radial-gradient(
+                circle at 85% 0%,
+                rgba(73,168,255,.13),
+                transparent 38%
+            ),
+            #0b141f;
+        border: 1px solid #263b51;
+        border-radius: 16px;
+        padding: 24px;
+    }
+
+    .badge {
+        display: inline-block;
+        border: 1px solid #28506d;
+        background: #0b1a27;
+        color: #8fd7ff;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: .72rem;
+        font-weight: 800;
+    }
+
+    .green {
+        color: #32d296;
+    }
+
+    .amber {
+        color: #f0b35a;
+    }
+
+    .muted {
+        color: #718196;
+    }
+
+    .rule {
+        height: 1px;
+        background: #1c2938;
+        margin: 30px 0;
+    }
+
+    .callout {
+        border: 1px solid #234c6a;
+        border-left: 3px solid #49a8ff;
+        background: #0b1824;
+        border-radius: 10px;
+        padding: 13px 15px;
+        color: #91abc1;
+        font-size: .8rem;
+    }
+
+    .badge-critical { background: #7f1d1d; color: #fca5a5; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+    .badge-high { background: #78350f; color: #fde68a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+    .badge-medium { background: #1e3a8a; color: #93c5fd; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+    .badge-low { background: #064e3b; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
+
+# ============================================================
+# DATA LOADERS
+# ============================================================
+
+@st.cache_data
+def load_risk_data():
+    risk_csv = Path("outputs/event_risk_scores.csv")
+    if not risk_csv.exists():
+        risk_csv = Path("attack_graph_output/event_risk_scores.csv")
+    if risk_csv.exists():
+        return pd.read_csv(risk_csv)
+    return pd.DataFrame()
+
+@st.cache_data
+def get_total_flows():
+    flows_path = Path("outputs/suspicious_flows_with_metadata.csv")
+    if not flows_path.exists():
+        flows_path = Path("attack_graph_output/suspicious_flows_with_metadata.csv")
+    if flows_path.exists():
+        try:
+            df = pd.read_csv(flows_path, usecols=[0])
+            return len(df)
+        except Exception:
+            return 243222
+    return 243222
+
+df_risks = load_risk_data()
+total_flows = get_total_flows()
 
 # ============================================================
 # SIDEBAR
 # ============================================================
 
 with st.sidebar:
-
     st.markdown("## 🛡️ CyberSentinel")
     st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
-    st.markdown(
-        '<div class="smallcaps">Overview</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="smallcaps">Overview</div>', unsafe_allow_html=True)
+    st.page_link("app.py", label="Dashboard")
 
-    st.page_link(
-        "app.py",
-        label="Dashboard",
-    )
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Detection</div>', unsafe_allow_html=True)
+    st.page_link("pages/attack_detection.py", label="Attack Detection")
 
-    st.markdown(
-        '<div class="smallcaps" style="margin-top:18px">'
-        'Detection</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Investigation</div>', unsafe_allow_html=True)
+    st.page_link("pages/incident_investigation.py", label="Incident Investigation")
+    st.page_link("pages/attack_graph.py", label="Attack Graph")
 
-    st.page_link(
-        "pages/attack_detection.py",
-        label="Attack Detection",
-        
-    )
-
-    st.markdown(
-        '<div class="smallcaps" style="margin-top:18px">'
-        'Investigation</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.page_link(
-        "pages/incident_investigation.py",
-        label="Incident Investigation",
-    )
-
-    st.page_link(
-        "pages/attack_graph.py",
-        label="Attack Graph",
-    )
-
-    st.markdown(
-        '<div class="smallcaps" style="margin-top:18px">'
-        'Future Modules</div>',
-        unsafe_allow_html=True,
-    )
-
-    st.page_link(
-        "pages/risk_assessment.py",
-        label="Risk Assessment",
-    )
-
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Future Modules</div>', unsafe_allow_html=True)
+    st.page_link("pages/risk_assessment.py", label="Risk Assessment")
+    st.page_link("pages/ai_investigation.py", label="AI Investigation")
 
     st.divider()
 
-    # FIXED: use st.html instead of indented markdown HTML
     st.html(
         f"""
-        <div class="card"
-             style="min-height:0;padding:13px">
-
-            <div class="green"
-                 style="font-weight:800;font-size:.76rem">
+        <div class="card" style="min-height:0;padding:13px">
+            <div class="green" style="font-weight:800;font-size:.76rem">
                 ● SYSTEM ONLINE
             </div>
-
-            <div style="
-                color:#718196;
-                font-size:.7rem;
-                margin-top:6px;
-            ">
+            <div style="color:#718196;font-size:.7rem;margin-top:6px;">
                 CICIDS2017 · {total_flows:,} flows
             </div>
-
         </div>
         """
     )
 
 # ============================================================
-# DATA LOADER
-# ============================================================
-
-@st.cache_data
-def load_risk_data():
-    risk_csv = Path("outputs/event_risk_scores.csv")
-    if risk_csv.exists():
-        return pd.read_csv(risk_csv)
-    return pd.DataFrame()
-
-df_risks = load_risk_data()
-
-# ============================================================
 # HEADER & INCIDENT SELECTOR
 # ============================================================
 
-st.markdown('<div class="section-title">ENTERPRISE SOAR COMMAND CENTER</div>', unsafe_allow_html=True)
+st.markdown('<div class="smallcaps">ENTERPRISE SOAR COMMAND CENTER</div>', unsafe_allow_html=True)
 st.title("Incident Triage, Risk Analysis & AI Investigation")
-st.markdown("Inspect deterministic risk scores, trigger autonomous multi-step AI investigations, execute SOAR playbooks, and export SOC reports from a single console.")
+st.markdown('<div class="subtitle">Inspect deterministic risk scores, trigger autonomous multi-step AI investigations, execute SOAR playbooks, and export SOC reports from a single console.</div>', unsafe_allow_html=True)
 
 if not df_risks.empty:
     col_sel1, col_sel2 = st.columns([3, 1])
@@ -197,7 +245,7 @@ if not df_risks.empty:
         level_class = f"badge-{selected_row['risk_level'].lower()}"
         st.markdown(f"**Severity Band:** <span class='{level_class}'>{selected_row['risk_level']}</span>", unsafe_allow_html=True)
 else:
-    st.warning("No risk scores found. Run `risk_analyzer.py` first.")
+    st.warning("No risk scores found. Make sure `event_risk_scores.csv` is generated in your outputs folder.")
     st.stop()
 
 st.divider()
@@ -274,7 +322,6 @@ with tab1:
                         output_dir = Path("outputs")
                         output_dir.mkdir(parents=True, exist_ok=True)
                         
-                        # Save JSON & MD
                         Path(f"outputs/agentic_investigation_{selected_event_id}.json").write_text(
                             json.dumps({"event_id": selected_event_id, "report": report_content}, indent=2), encoding="utf-8"
                         )
@@ -323,9 +370,9 @@ with tab2:
     with col_score:
         st.markdown(
             f"""
-            <div class="metric-card" style="padding: 30px;">
-                <div style="font-size:0.8rem; color:#94a3b8; font-weight:700; text-transform:uppercase;">Composite Risk Score</div>
-                <div style="font-size: 3.5rem; font-weight: 900; color: #38bdf8; margin: 10px 0;">{score}</div>
+            <div class="card" style="padding: 20px; min-height: unset; text-align: center;">
+                <div style="font-size:0.75rem; color:#8190a3; font-weight:800; text-transform:uppercase; letter-spacing:.13em;">Composite Risk Score</div>
+                <div style="font-size: 3.5rem; font-weight: 900; color: #49a8ff; margin: 10px 0;">{score}</div>
                 <div style="font-size: 0.9rem; color: #cbd5e1;">Scale: 0 to 100 ({level})</div>
             </div>
             """,
@@ -383,3 +430,4 @@ with tab3:
             status_style = "text-decoration: line-through; color: #64748b;" if done else ""
             st.markdown(f"<div style='{status_style}'><b>Step 0{idx}: {title}</b><br><span style='font-size:0.85rem; color:#94a3b8;'>{desc}</span></div>", unsafe_allow_html=True)
         st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
+
