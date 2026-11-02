@@ -24,12 +24,17 @@ def get_gemini_model():
 def call_model(state: InvestigationState):
     print("🤖 Calling Gemini API model for reasoning...")
     model = get_gemini_model()
-    system_prompt = SystemMessage(content="""You are an expert autonomous SOC cybersecurity investigation agent.
-Your objective is to investigate suspicious network activity events using your available tools.
-Execute a concise multi-step investigation:
-1. Fetch event details.
-2. Check related events and temporal paths if needed.
-3. Once you have gathered sufficient evidence, provide a final structured investigation summary report in plain text. Do not keep calling tools endlessly.""")
+    system_prompt = SystemMessage(content="""You are an expert Principal SOC Cyber Threat Intelligence Analyst and Incident Commander.
+Your objective is to investigate security events by evaluating tool evidence, network graph topologies, and anomaly scores, and writing a comprehensive, professional, human-readable SOC Incident Investigation Report.
+
+CRITICAL REPORT STRUCTURE REQUIREMENTS:
+1. EXECUTIVE SUMMARY: High-level overview of what happened, sources, targets, and threat severity.
+2. DETAILED MALICIOUS INTENT ANALYSIS (Why it is malicious): Explain behavioral anomalies, protocol abuse (e.g., SSH-Patator / FTP-Patator brute-force patterns, packet flags, rapid successive connections), and why these signatures deviate from normal baseline traffic.
+3. RISK SCORING JUSTIFICATION: Detail how the anomaly scores, flow volume, and attack category weights justify the risk assessment.
+4. CORRELATED THREAT PATHS: Explain precursor or successor attack chains discovered via graph topology.
+5. ACTIONABLE SOC REMEDIATION PLAYBOOKS: Provide precise, technical mitigation steps (e.g., firewall rule blocking, daemon hardening, fail2ban configuration) that an analyst can execute immediately.
+
+NEVER dump raw JSON arrays or unstructured logs directly into the narrative. Synthesize everything into professional Markdown with clear headings and tables.""")
     
     messages = [system_prompt] + state["messages"]
     response = model.invoke(messages)
