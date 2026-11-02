@@ -22,15 +22,11 @@ st.set_page_config(
 
 ROOT = Path(__file__).resolve().parent.parent
 
-OUTPUT_DIR = ROOT / "attack_graph_output"
+# Outputs folder path
+OUTPUT_DIR = ROOT / "outputs"
 
-SUSPICIOUS_PATH = (
-    OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
-)
-
-SUMMARY_PATH = (
-    OUTPUT_DIR / "pipeline_summary.json"
-)
+SUSPICIOUS_PATH = OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
+SUMMARY_PATH = OUTPUT_DIR / "pipeline_summary.json"
 
 
 # ============================================================

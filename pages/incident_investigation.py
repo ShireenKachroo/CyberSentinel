@@ -11,6 +11,7 @@ import streamlit as st
 st.set_page_config(
     page_title="CyberSentinel | Incident Investigation",
     layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 
@@ -34,6 +35,11 @@ st.markdown(
     .stApp {
         background: #070b11;
         color: #edf3fa;
+    }
+
+    [data-testid="stSidebar"] {
+        background: #0b121c;
+        border-right: 1px solid #1d2b3c;
     }
 
     .block-container {
@@ -297,6 +303,49 @@ else:
     event_id_column = None
 
 
+with st.sidebar:
+    st.markdown("## 🛡️ CyberSentinel")
+    st.caption("ML-Based Cyber Attack Detection")
+
+    st.divider()
+
+    st.markdown('<div class="smallcaps">Overview</div>', unsafe_allow_html=True)
+    st.page_link("app.py", label="Dashboard")
+
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Detection</div>', unsafe_allow_html=True)
+    st.page_link("pages/attack_detection.py", label="Attack Detection")
+
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Investigation</div>', unsafe_allow_html=True)
+    st.page_link("pages/incident_investigation.py", label="Incident Investigation")
+    st.page_link("pages/attack_graph.py", label="Attack Graph")
+
+    st.markdown('<div class="smallcaps" style="margin-top:18px">Future Modules</div>', unsafe_allow_html=True)
+    st.page_link("pages/risk_assessment.py", label="Risk Assessment")
+
+    st.divider()
+
+    st.html(
+        f"""
+        <div class="card"
+             style="min-height:0;padding:13px">
+
+            <div class="green"
+                 style="font-weight:800;font-size:.76rem">
+                ● SYSTEM ONLINE
+            </div>
+
+            <div style="
+                color:#718196;
+                font-size:.7rem;
+                margin-top:6px;
+            ">
+                CICIDS2017 · {len(events):,} flows
+            </div>
+
+        </div>
+        """
+    )
+
 # ============================================================
 # HELPER FUNCTIONS
 # ============================================================
@@ -420,10 +469,10 @@ for _, row in events.iterrows():
 # PAGE HEADER
 # ============================================================
 
-st.markdown(
-    '<div class="smallcaps">CYBERSENTINEL INVESTIGATION</div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="smallcaps">CYBERSENTINEL INVESTIGATION</div>',
+#     unsafe_allow_html=True,
+# )
 
 st.title("Incident Investigation")
 
@@ -690,9 +739,9 @@ else:
         displayed_events.iterrows()
     ):
 
-        # ----------------------------------------------------
+        # ------------------------------------------------    
         # EVENT ID
-        # ----------------------------------------------------
+        # ------------------------------------------------    
 
         if event_id_column:
 
@@ -710,9 +759,9 @@ else:
             event_id = f"EVT-{index + 1:05d}"
 
 
-        # ----------------------------------------------------
+        # ------------------------------------------------    
         # DATA
-        # ----------------------------------------------------
+        # ------------------------------------------------    
 
         start_time = get_value(
             row,
@@ -758,9 +807,9 @@ else:
         )
 
 
-        # ----------------------------------------------------
+        # ------------------------------------------------    
         # PRIORITY
-        # ----------------------------------------------------
+        # ------------------------------------------------    
 
         severity = severity_from_event(row)
 
@@ -769,9 +818,9 @@ else:
         )
 
 
-        # ----------------------------------------------------
+        # ------------------------------------------------    
         # CARD
-        # ----------------------------------------------------
+        # ------------------------------------------------    
 
         st.markdown(
             '<div class="event-card">'

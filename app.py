@@ -779,13 +779,13 @@ with pipeline_col:
             "05",
             "Risk Assessment",
             "Incident → risk assessment",
-            False,
+            True,
         ),
         (
             "06",
             "Agentic Investigation",
             "Evidence → investigation findings",
-            False,
+            True,
         ),
     ]
 
@@ -930,24 +930,24 @@ st.plotly_chart(
 # MID-VIVA SCOPE
 # ============================================================
 
-# FIXED: st.html
-st.html(
-    """
-    <div class="callout">
+# # FIXED: st.html
+# st.html(
+#     """
+#     <div class="callout">
 
-        <b>Mid-Viva implementation:</b>
-        The current system covers CICIDS2017 preprocessing,
-        Isolation Forest anomaly detection, suspicious-flow
-        extraction, attack-event formation and attack-graph
-        reconstruction.
+#         <b>Mid-Viva implementation:</b>
+#         The current system covers CICIDS2017 preprocessing,
+#         Isolation Forest anomaly detection, suspicious-flow
+#         extraction, attack-event formation and attack-graph
+#         reconstruction.
 
-        <br><br>
+#         <br><br>
 
-        <span class="muted">
-        Risk assessment and agentic AI investigation are retained
-        as subsequent development stages.
-        </span>
+#         <span class="muted">
+#         Risk assessment and agentic AI investigation are retained
+#         as subsequent development stages.
+#         </span>
 
-    </div>
-    """
-)
+#     </div>
+#     """
+# )

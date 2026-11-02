@@ -3,29 +3,10 @@ from pathlib import Path
 import pandas as pd
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
+import json
 
 load_dotenv()
 from agent.workflow import create_investigation_graph
-
-from pathlib import Path
-import json
-
-# Inside test_agent.py, after the graph finishes and you get the final message content:
-final_report_text = last_message.content # (the generated report text)
-
-output_dir = Path("agentic_investigation_output")
-output_dir.mkdir(parents=True, exist_ok=True)
-
-# Save as Markdown (.md)
-md_path = output_dir / f"agentic_investigation_{sample_event_id}.md"
-md_path.write_text(final_report_text, encoding="utf-8")
-
-# Save as JSON (.json)
-json_path = output_dir / f"agentic_investigation_{sample_event_id}.json"
-json_path.write_text(json.dumps({"event_id": sample_event_id, "report": final_report_text}, indent=2), encoding="utf-8")
-
-print(f"Report successfully saved to:\n- {md_path}\n- {json_path}")
-
 
 def test_investigation():
     print("Initializing investigation test...")
@@ -56,8 +37,8 @@ def test_investigation():
     print("\nStarting agentic multi-step investigation loop...")
     print("-" * 60)
 
-    #recursion_limit set karne se agar loop fassa bhi toh 15 steps mein ruk jayega
     config = {"recursion_limit": 15}
+    last_report_content = ""
 
     for step in graph.stream(initial_state, config=config, stream_mode="updates"):
         for node_name, output in step.items():
@@ -68,7 +49,24 @@ def test_investigation():
                         for tc in msg.tool_calls:
                             print(f"Agent calling tool: '{tc['name']}' with args: {tc['args']}")
                     elif hasattr(msg, "content") and msg.content:
-                        print(f"LLM Output / Summary:\n{msg.content}")
+                        content_text = msg.content
+                        print(f"LLM Output / Summary:\n{content_text}")
+                        # Capture the latest substantive LLM response as the report
+                        if len(content_text) > 100:
+                            last_report_content = content_text
+
+    # Automatically save report if generated
+    if last_report_content:
+        output_dir = Path("agentic_investigation_output")
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        md_path = output_dir / f"agentic_investigation_{sample_event_id}.md"
+        md_path.write_text(last_report_content, encoding="utf-8")
+
+        json_path = output_dir / f"agentic_investigation_{sample_event_id}.json"
+        json_path.write_text(json.dumps({"event_id": sample_event_id, "report": last_report_content}, indent=2), encoding="utf-8")
+
+        print(f"\nReport successfully saved to:\n- {md_path}\n- {json_path}")
 
     print("\n" + "=" * 60)
     print("Investigation test finished successfully!")
