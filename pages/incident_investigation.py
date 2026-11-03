@@ -305,7 +305,6 @@ else:
 
 with st.sidebar:
     st.markdown("## 🛡️ CyberSentinel")
-    st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
@@ -572,22 +571,22 @@ for col, (label, value, description) in zip(
 # CORRELATION STATUS
 # ============================================================
 
-st.markdown(
-    '<div style="height:18px;"></div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div style="height:18px;"></div>',
+#     unsafe_allow_html=True,
+# )
 
-st.markdown(
-    '<div class="warning-callout">'
-    '<b>Correlation status:</b> '
-    'The backend currently provides grouped attack events. '
-    'A separate higher-level incident ID / incident formation '
-    'output is not present in the supplied attack_events.csv, '
-    'so this interface does not present individual events as '
-    'confirmed incidents.'
-    '</div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="warning-callout">'
+#     '<b>Correlation status:</b> '
+#     'The backend currently provides grouped attack events. '
+#     'A separate higher-level incident ID / incident formation '
+#     'output is not present in the supplied attack_events.csv, '
+#     'so this interface does not present individual events as '
+#     'confirmed incidents.'
+#     '</div>',
+#     unsafe_allow_html=True,
+# )
 
 
 # ============================================================
@@ -981,18 +980,18 @@ with left:
                 )
 
 
-                st.markdown(
-                    '<div class="callout">'
-                    '<b>Temporal window</b><br>'
-                    f'{get_value(selected, "start_time")}'
-                    ' → '
-                    f'{get_value(selected, "end_time")}'
-                    '<br><br>'
-                    '<b>Duration:</b> '
-                    f'{get_value(selected, "duration_seconds")} seconds'
-                    '</div>',
-                    unsafe_allow_html=True,
-                )
+                # st.markdown(
+                #     '<div class="callout">'
+                #     '<b>Temporal window</b><br>'
+                #     f'{get_value(selected, "start_time")}'
+                #     ' → '
+                #     f'{get_value(selected, "end_time")}'
+                #     '<br><br>'
+                #     '<b>Duration:</b> '
+                #     f'{get_value(selected, "duration_seconds")} seconds'
+                #     '</div>',
+                #     unsafe_allow_html=True,
+                # )
 
 
 # ============================================================
@@ -1136,77 +1135,77 @@ for number, title, description in correlation_steps:
 # HANDOFF
 # ============================================================
 
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="rule"></div>',
+#     unsafe_allow_html=True,
+# )
 
-st.markdown(
-    '<div class="smallcaps">INVESTIGATION HANDOFF</div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="smallcaps">INVESTIGATION HANDOFF</div>',
+#     unsafe_allow_html=True,
+# )
 
-st.header("Next Investigation Layers")
-
-
-handoff_cols = st.columns(3)
-
-handoffs = [
-    (
-        "🕸️",
-        "Attack Graph",
-        "Trace relationships between hosts, attack events and attack types.",
-    ),
-    (
-        "⚠️",
-        "Risk Assessment",
-        "Evaluate severity once the risk-scoring backend is available.",
-    ),
-    (
-        "🤖",
-        "AI Investigation",
-        "Use reconstructed evidence for agentic investigation once the agent is connected.",
-    ),
-]
+# st.header("Next Investigation Layers")
 
 
-for col, (icon, title, description) in zip(
-    handoff_cols,
-    handoffs,
-):
+# handoff_cols = st.columns(3)
 
-    with col:
+# handoffs = [
+#     (
+#         "🕸️",
+#         "Attack Graph",
+#         "Trace relationships between hosts, attack events and attack types.",
+#     ),
+#     (
+#         "⚠️",
+#         "Risk Assessment",
+#         "Evaluate severity once the risk-scoring backend is available.",
+#     ),
+#     (
+#         "🤖",
+#         "AI Investigation",
+#         "Use reconstructed evidence for agentic investigation once the agent is connected.",
+#     ),
+# ]
 
-        st.markdown(
-            '<div class="metric-card">'
-            f'<div style="font-size:1.35rem;">{icon}</div>'
-            f'<div style="color:#edf3fa;font-size:0.95rem;'
-            f'font-weight:800;margin-top:9px;">'
-            f'{title}'
-            '</div>'
-            f'<div class="metric-desc">{description}</div>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
+
+# for col, (icon, title, description) in zip(
+#     handoff_cols,
+#     handoffs,
+# ):
+
+#     with col:
+
+#         st.markdown(
+#             '<div class="metric-card">'
+#             f'<div style="font-size:1.35rem;">{icon}</div>'
+#             f'<div style="color:#edf3fa;font-size:0.95rem;'
+#             f'font-weight:800;margin-top:9px;">'
+#             f'{title}'
+#             '</div>'
+#             f'<div class="metric-desc">{description}</div>'
+#             '</div>',
+#             unsafe_allow_html=True,
+#         )
 
 
 # ============================================================
 # FOOTER NOTE
 # ============================================================
 
-st.markdown(
-    '<div class="rule"></div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="rule"></div>',
+#     unsafe_allow_html=True,
+# )
 
-st.markdown(
-    '<div class="callout">'
-    '<b>Backend integration status:</b> '
-    'This page is now driven by the actual attack_events.csv '
-    'output. The interface does not invent incident IDs or '
-    'claim that attack events are confirmed incidents. '
-    'Higher-level incident correlation can be connected when '
-    'that backend stage is implemented.'
-    '</div>',
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     '<div class="callout">'
+#     '<b>Backend integration status:</b> '
+#     'This page is now driven by the actual attack_events.csv '
+#     'output. The interface does not invent incident IDs or '
+#     'claim that attack events are confirmed incidents. '
+#     'Higher-level incident correlation can be connected when '
+#     'that backend stage is implemented.'
+#     '</div>',
+#     unsafe_allow_html=True,
+# )

@@ -188,7 +188,6 @@ total_flows = get_total_flows()
 
 with st.sidebar:
     st.markdown("## 🛡️ CyberSentinel")
-    st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
