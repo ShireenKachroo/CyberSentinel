@@ -10,3 +10,4 @@ __pycache__/
 .env
 agentic_investigation_output/
 agentic.py
+pages/ai_investigation.py
