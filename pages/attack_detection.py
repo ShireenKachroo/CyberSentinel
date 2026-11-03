@@ -208,17 +208,11 @@ def load_pipeline_summary():
 def load_suspicious_flows():
 
     paths = [
-        ROOT / "attack_graph_output"
-        / "suspicious_flows_with_metadata.csv",
-
-        ROOT.parent / "attack_graph_output"
-        / "suspicious_flows_with_metadata.csv",
-
-        Path(
-            "attack_graph_output/"
-            "suspicious_flows_with_metadata.csv"
-        ),
-
+        # Correct path pointing to your outputs/ folder
+        OUTPUT_DIR / "suspicious_flows_with_metadata.csv",
+        
+        # Keep backups in case it's run from different working directories
+        ROOT / "attack_graph_output" / "suspicious_flows_with_metadata.csv",
         ROOT / "suspicious_flows_with_metadata.csv",
     ]
 

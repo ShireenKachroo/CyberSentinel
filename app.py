@@ -161,7 +161,7 @@ ROOT = Path(__file__).resolve().parent
 
 DATA_PATH = ROOT / "data" / "cleaned_cicids2017.parquet"
 
-OUTPUT_DIR = ROOT / "attack_graph_output"
+OUTPUT_DIR = ROOT / "outputs"
 
 EVENTS_PATH = OUTPUT_DIR / "attack_events.csv"
 SUSPICIOUS_PATH = OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
@@ -365,7 +365,6 @@ with st.sidebar:
     st.page_link(
         "pages/attack_detection.py",
         label="Attack Detection",
-        
     )
 
     st.markdown(

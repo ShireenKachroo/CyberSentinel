@@ -10,12 +10,12 @@ from agent.workflow import create_investigation_graph
 
 def test_investigation():
     print("Initializing investigation test...")
-    
+
     events_path = Path("outputs/attack_events.csv")
     if not events_path.exists():
         print(f"Error: Could not find {events_path}.")
         return
-    
+
     df = pd.read_csv(events_path)
     sample_event_id = str(df.iloc[0]['event_id'])
     print(f"Selected sample Event ID for investigation: {sample_event_id}")

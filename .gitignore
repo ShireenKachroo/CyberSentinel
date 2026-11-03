@@ -6,7 +6,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Environment Variables & API Keys (Security ke liye)
+# Environment Variables & API Keys
 .env
 agentic_investigation_output/
 agentic.py
