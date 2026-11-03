@@ -343,7 +343,6 @@ if attack_events is None and events_df is not None:
 with st.sidebar:
 
     st.markdown("## 🛡️ CyberSentinel")
-    st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
