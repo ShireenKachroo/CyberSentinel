@@ -3,7 +3,8 @@ import pandas as pd
 import json
 import streamlit as st
 from langchain_core.messages import HumanMessage
-from agent.workflow import create_investigation_graph
+from agent.agent import run_investigation
+from agent.workflow import generate_report_from_json
 
 import os
 from dotenv import load_dotenv
@@ -207,7 +208,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     st.page_link("pages/risk_assessment.py", label="Risk Assessment")
-    # st.page_link("pages/ai_investigation.py", label="AI Investigation")
 
     st.divider()
 
@@ -270,13 +270,12 @@ factor_h = selected_row.get('host_involvement_factor', 40.0)
 factor_t = selected_row.get('temporal_correlation_factor', 20.0)
 factor_c = selected_row.get('attack_category_factor', 60.0)
 
-# Check if AI report JSON exists
-investigation_json = Path(f"outputs/agentic_investigation_{selected_event_id}.json")
+# Check if Markdown report file exists in outputs folder
+report_file_path = Path(f"outputs/agentic_investigation_output/report_{selected_event_id}.md")
 report_content = ""
-if investigation_json.exists():
+if report_file_path.exists():
     try:
-        inv_data = json.loads(investigation_json.read_text(encoding="utf-8"))
-        report_content = inv_data.get("report", "")
+        report_content = report_file_path.read_text(encoding="utf-8")
     except Exception:
         pass
 
@@ -292,57 +291,55 @@ tab1, tab2, tab3 = st.tabs([
 
 with tab1:
     st.markdown(f"### Autonomous Investigation Report for `{selected_event_id}` ({attack_type})")
-    st.markdown("Generated dynamically by the LangGraph multi-step agent using Gemini API and specialized SOC tools.")
+    st.markdown("Generated dynamically by the LangGraph multi-step agent using Gemini API and specialized SOC tools, formatted into a professional Tier-3 SOC report.")
     
     col_run, col_status = st.columns([1, 2])
     with col_run:
         if st.button(f"Trigger AI Investigation for {selected_event_id}", type="primary"):
-            with st.spinner(f"Agent running multi-step tool calls for {selected_event_id}... Please wait."):
+            with st.spinner(f"Agent running multi-step tool calls and generating SOC report for {selected_event_id}... Please wait."):
                 try:
-                    graph = create_investigation_graph()
-                    initial_state = {
-                        "event_id": selected_event_id,
-                        "target_ip": None,
-                        "messages": [
-                            HumanMessage(content=f"Investigate event ID {selected_event_id}. Use your tools to fetch details, check related events, and provide a final summary report.")
-                        ],
-                        "investigation_steps": [],
-                        "retrieved_evidence": {},
-                        "investigation_complete": False,
-                        "final_report": None
-                    }
+                    # 1. Run agent investigation workflow
+                    result = run_investigation(event_id=selected_event_id)
                     
-                    last_content = ""
-                    for step in graph.stream(initial_state, config={"recursion_limit": 15}, stream_mode="updates"):
-                        for _, output in step.items():
-                            if "messages" in output:
-                                for msg in output["messages"]:
-                                    if hasattr(msg, "content") and msg.content and len(msg.content) > 100:
-                                        last_content = msg.content
-                    
-                    if last_content:
-                        report_content = last_content
-                        output_dir = Path("outputs")
-                        output_dir.mkdir(parents=True, exist_ok=True)
-                        
-                        Path(f"outputs/agentic_investigation_{selected_event_id}.json").write_text(
-                            json.dumps({"event_id": selected_event_id, "report": report_content}, indent=2), encoding="utf-8"
-                        )
-                        Path(f"outputs/agentic_investigation_{selected_event_id}.md").write_text(report_content, encoding="utf-8")
-                        st.success("Investigation complete and report generated successfully!")
-                        st.rerun()
+                    # 2. Extract raw JSON string from final message
+                    final_messages = result.get("messages", [])
+                    if final_messages:
+                        raw_content = final_messages[-1].content
+                        if isinstance(raw_content, list):
+                            investigation_json_str = "".join([str(item) for item in raw_content])
+                        else:
+                            investigation_json_str = str(raw_content)
+                    else:
+                        investigation_json_str = "{}"
+
+                    # 3. Generate professional Markdown report using Groq / GPT-OSS
+                    report_content = generate_report_from_json(investigation_json_str)
+
+                    # 4. Save into outputs/agentic_investigation_output/
+                    output_dir = Path("outputs/agentic_investigation_output")
+                    output_dir.mkdir(parents=True, exist_ok=True)
+
+                    json_file_path = output_dir / f"investigation_{selected_event_id}.json"
+                    json_file_path.write_text(investigation_json_str, encoding="utf-8")
+
+                    md_file_path = output_dir / f"report_{selected_event_id}.md"
+                    md_file_path.write_text(report_content, encoding="utf-8")
+
+                    st.success("Investigation complete and professional report generated successfully!")
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error running investigation agent: {e}")
     
     with col_status:
-        if report_content:
-            st.success("Status: Investigation report available in cache.")
+        if report_file_path.exists():
+            st.success("Status: Investigation report found in output directory.")
         else:
             st.warning("Click the button to run the AI agent & generate investigation report.")
 
     st.divider()
 
-    if report_content:
+    if report_file_path.exists():
+        report_content = report_file_path.read_text(encoding="utf-8")
         st.markdown(report_content)
         
         st.markdown("### Export Report")
@@ -351,18 +348,20 @@ with tab1:
             st.download_button(
                 label="Download Report as Markdown (.md)",
                 data=report_content,
-                file_name=f"soc_report_{selected_event_id}.md",
+                file_name=f"report_{selected_event_id}.md",
                 mime="text/markdown"
             )
         with col_d2:
+            json_file = Path(f"outputs/agentic_investigation_output/investigation_{selected_event_id}.json")
+            json_data = json_file.read_text(encoding="utf-8") if json_file.exists() else "{}"
             st.download_button(
                 label="Download Report as JSON (.json)",
-                data=json.dumps({"event_id": selected_event_id, "report": report_content}, indent=2),
-                file_name=f"soc_report_{selected_event_id}.json",
+                data=json_data,
+                file_name=f"investigation_{selected_event_id}.json",
                 mime="application/json"
             )
     else:
-        st.info("Click **'Trigger Live AI Investigation'** above to execute the agentic workflow and view the report.")
+        st.info("Click **'Trigger AI Investigation'** above to execute the agentic workflow and view the report.")
 
 with tab2:
     st.markdown("### 5-Factor Deterministic Risk Engine Breakdown")
@@ -433,4 +432,3 @@ with tab3:
             status_style = "text-decoration: line-through; color: #64748b;" if done else ""
             st.markdown(f"<div style='{status_style}'><b>Step 0{idx}: {title}</b><br><span style='font-size:0.85rem; color:#94a3b8;'>{desc}</span></div>", unsafe_allow_html=True)
         st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
-
