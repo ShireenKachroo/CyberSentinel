@@ -1,58 +1,121 @@
-from langchain_core.tools import tool
 import pandas as pd
-from pathlib import Path
+from langchain_core.tools import tool
+
+from agent.tools.data_utils import get_events, get_flows, safe_int
+
+WINDOW_SECONDS = 60
+
 
 @tool
 def get_flow_evidence(event_id: str, max_flows: int = 5) -> str:
-    """Retrieve summarized network flow evidence and anomaly scores supporting a specific event ID."""
-    flows_path = Path("outputs/suspicious_flows_with_metadata.csv")
-    if not flows_path.exists():
-        return f"Error: suspicious_flows_with_metadata.csv not found."
-    
-    events_path = Path("outputs/attack_events.csv")
-    if not events_path.exists():
-        return f"Error: attack_events.csv not found."
-    
-    events_df = pd.read_csv(events_path)
-    match = events_df[events_df['event_id'].astype(str) == str(event_id)]
-    if match.empty:
-        return f"Event ID {event_id} not found."
-    
-    event = match.iloc[0]
-    flows_df = pd.read_csv(flows_path)
-    
-    # Filter flows matching source IP and destination IP of the event
-    matched_flows = flows_df[(flows_df['src_ip'] == event['src_ip']) & (flows_df['dst_ip'] == event['dst_ip'])]
-    if matched_flows.empty:
-        return f"No individual flow records found matching event {event_id} (Src: {event['src_ip']}, Dst: {event['dst_ip']})."
-    
-    # Summarize top flows into a readable text format instead of a massive raw JSON dump
-    summary_lines = [f"Found {len(matched_flows)} matching flow records for Event {event_id} (Showing top {min(max_flows, len(matched_flows))}):"]
-    
-    for idx, row in matched_flows.head(max_flows).iterrows():
-        flow_id = row.get('flow id', 'N/A')
-        src = f"{row.get('src_ip')}:{int(row.get('src_port', 0))}"
-        dst = f"{row.get('dst_ip')}:{int(row.get('dst_port', 0))}"
-        duration = row.get('flow duration', 0)
-        fwd_pkts = row.get('total fwd packets', 0)
-        bwd_pkts = row.get('total backward packets', 0)
-        label = row.get('label', 'Unknown')
-        score = row.get('anomaly_score', 'N/A')
-        
-        # Extract key flags safely
-        flags = []
-        if row.get('syn flag count', 0) == 1: flags.append('SYN')
-        if row.get('ack flag count', 0) == 1: flags.append('ACK')
-        if row.get('psh flag count', 0) == 1: flags.append('PSH')
-        if row.get('rst flag count', 0) == 1: flags.append('RST')
-        flag_str = ", ".join(flags) if flags else "None"
-        
-        summary_lines.append(
-            f"- **Flow ID**: `{flow_id}`\n"
-            f"  - **Connection Path**: `{src}` -> `{dst}`\n"
-            f"  - **Classification**: `{label}` | **Anomaly Score**: `{score}`\n"
-            f"  - **Duration**: `{duration} µs` | **Packets**: Fwd={fwd_pkts}, Bwd={bwd_pkts}\n"
-            f"  - **TCP Flags**: `{flag_str}`"
+    """
+    Retrieve individual network flow evidence for a specific event.
+
+    Returns a summary (flow count, label counts) plus up to `max_flows`
+    flow records with IPs, ports, packet counts, TCP flags, label and
+    anomaly score (lower score = more anomalous).
+
+    Use this when the event metadata alone is insufficient to explain
+    the suspicious network behaviour.
+    """
+
+    try:
+        events_df = get_events()
+        event_match = events_df[events_df["event_id"] == str(event_id)]
+
+        if event_match.empty:
+            return f"Event ID {event_id} was not found."
+
+        event = event_match.iloc[0]
+        flows_df = get_flows()
+
+        if not {"src_ip", "dst_ip"}.issubset(flows_df.columns):
+            return "Error: Required IP columns are missing from flow data."
+
+        matched = flows_df[
+            (flows_df["src_ip"] == event["src_ip"])
+            & (flows_df["dst_ip"] == event["dst_ip"])
+        ]
+        ip_pair_total = len(matched)
+        note = f"Matched {ip_pair_total} flow(s) by source/destination IP."
+
+        t_start = event.get("_start_time_parsed", pd.NaT)
+        t_end = event.get("_end_time_parsed", pd.NaT)
+
+        if "_parsed_time" in matched.columns and pd.notna(t_start):
+            if pd.isna(t_end):
+                t_end = t_start
+            window = pd.Timedelta(seconds=WINDOW_SECONDS)
+
+            times = matched["_parsed_time"]
+            in_window = (
+                times.notna()
+                & (times >= t_start - window)
+                & (times <= t_end + window)
+            )
+            matched = matched[in_window]
+            note += (
+                f" Time-filtered to event window +/-{WINDOW_SECONDS}s "
+                f"-> {len(matched)} flow(s)."
+            )
+        else:
+            note += " Time filtering not applied (timestamp unavailable)."
+
+        if matched.empty:
+            return (
+                f"No flow records found for event {event_id} in its time "
+                f"window. {note} Do not retry this tool; report that flow "
+                f"evidence is unavailable."
+            )
+
+        label_counts = (
+            matched["label"].value_counts().head(5).to_dict()
+            if "label" in matched.columns else {}
         )
-        
-    return "\n".join(summary_lines)
+
+        max_flows = max(1, min(int(max_flows), 20))
+
+        if "anomaly_score" in matched.columns:
+            shown = matched.sort_values("anomaly_score", ascending=True)
+        else:
+            shown = matched
+        shown = shown.head(max_flows)
+
+        lines = [
+            f"Event ID: {event_id}",
+            f"Matching flows: {len(matched)}",
+            f"Label counts: {label_counts}",
+            f"Displaying the {len(shown)} most anomalous flow(s).",
+            note,
+            "",
+        ]
+
+        for _, row in shown.iterrows():
+            flags = [
+                name
+                for col, name in [
+                    ("syn flag count", "SYN"),
+                    ("ack flag count", "ACK"),
+                    ("psh flag count", "PSH"),
+                    ("rst flag count", "RST"),
+                    ("fin flag count", "FIN"),
+                ]
+                if safe_int(row.get(col)) > 0
+            ]
+            lines.append(
+                f"Flow ID: {row.get('flow id', 'N/A')}\n"
+                f"Connection: {row.get('src_ip')}:{safe_int(row.get('src_port'))}"
+                f" -> {row.get('dst_ip')}:{safe_int(row.get('dst_port'))}\n"
+                f"Time: {row.get('timestamp', 'N/A')}\n"
+                f"Label: {row.get('label', 'Unknown')}\n"
+                f"Anomaly score: {row.get('anomaly_score', 'N/A')}\n"
+                f"Duration: {row.get('flow duration', 'N/A')}\n"
+                f"Forward packets: {row.get('total fwd packets', 'N/A')}\n"
+                f"Backward packets: {row.get('total backward packets', 'N/A')}\n"
+                f"TCP flags: {', '.join(flags) if flags else 'None'}\n"
+            )
+
+        return "\n".join(lines)
+
+    except Exception as e:
+        return f"Error retrieving flow evidence: {str(e)}"
