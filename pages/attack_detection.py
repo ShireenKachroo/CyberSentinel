@@ -22,15 +22,11 @@ st.set_page_config(
 
 ROOT = Path(__file__).resolve().parent.parent
 
-OUTPUT_DIR = ROOT / "attack_graph_output"
+# Outputs folder path
+OUTPUT_DIR = ROOT / "outputs"
 
-SUSPICIOUS_PATH = (
-    OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
-)
-
-SUMMARY_PATH = (
-    OUTPUT_DIR / "pipeline_summary.json"
-)
+SUSPICIOUS_PATH = OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
+SUMMARY_PATH = OUTPUT_DIR / "pipeline_summary.json"
 
 
 # ============================================================
@@ -212,17 +208,11 @@ def load_pipeline_summary():
 def load_suspicious_flows():
 
     paths = [
-        ROOT / "attack_graph_output"
-        / "suspicious_flows_with_metadata.csv",
-
-        ROOT.parent / "attack_graph_output"
-        / "suspicious_flows_with_metadata.csv",
-
-        Path(
-            "attack_graph_output/"
-            "suspicious_flows_with_metadata.csv"
-        ),
-
+        # Correct path pointing to your outputs/ folder
+        OUTPUT_DIR / "suspicious_flows_with_metadata.csv",
+        
+        # Keep backups in case it's run from different working directories
+        ROOT / "attack_graph_output" / "suspicious_flows_with_metadata.csv",
         ROOT / "suspicious_flows_with_metadata.csv",
     ]
 
@@ -287,7 +277,6 @@ if suspicious_count is None:
 with st.sidebar:
 
     st.markdown("## 🛡️ CyberSentinel")
-    st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
@@ -329,8 +318,8 @@ with st.sidebar:
     )
 
     st.markdown(
-        '<div class="smallcaps" '
-        'style="margin-top:18px">Future Modules</div>',
+        '<div class="smallcaps" style="margin-top:18px">'
+        'Agentic Investigation & Risk Assessment </div>',
         unsafe_allow_html=True,
     )
 
@@ -339,10 +328,10 @@ with st.sidebar:
         label="Risk Assessment",
     )
 
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    # st.page_link(
+    #     "pages/ai_investigation.py",
+    #     label="AI Investigation",
+    # )
 
     st.divider()
 

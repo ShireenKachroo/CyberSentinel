@@ -1,0 +1,111 @@
+===============================================================================
+                    DEVELOPER SETUP & GUIDELINES
+===============================================================================
+
+This document provides developer guidelines, environment setup steps,
+and critical folder/path structure rules required to run CyberSentinel properly.
+
+-------------------------------------------------------------------------------
+1. ENVIRONMENT SETUP (.env)
+-------------------------------------------------------------------------------
+- Create a `.env` file in the root directory of the project (`major/.env`).
+- Add your Google Gemini API key:
+      GEMINI_API_KEY="your_actual_gemini_api_key_here"
+
+- Note on API Key mapping:
+  The agentic modules dynamically map `GEMINI_API_KEY` to `GOOGLE_API_KEY` 
+  if not already set. However, maintaining `GEMINI_API_KEY` in `.env` is required.
+
+-------------------------------------------------------------------------------
+2. DIRECTORY & PATH STRUCTURE (CRITICAL)
+-------------------------------------------------------------------------------
+To prevent file-not-found errors across Streamlit pages, preserve the repository
+folder structure exactly as cloned:
+
+major/
+│
+├── .env                              <- API Keys
+├── .env.example                      <- Sample Environment Config
+├── app.py                            <- Main Entry Point (Streamlit Dashboard)
+├── agentic.py                        <- Agentic pipeline runner/executor
+├── risk_analyzer.py                  <- Risk scoring and evaluation script
+├── test_agent.py                     <- Testing script for agent components
+├── requirements.txt                  <- Dependencies
+├── instructions.txt                  <- Developer Guidelines
+├── README.md                         <- Project Documentation
+│
+├── .streamlit/
+│   └── config.toml                   <- Streamlit configuration settings
+│
+├── data/
+│   └── cleaned_cicids2017.parquet    <- Preprocessed dataset
+│
+├── notebooks/                        <- Jupyter Notebooks for pipeline development
+│   ├── dataset_preprocessing.ipynb
+│   └── isolation_forest.ipynb
+│
+├── outputs/                          <- Output folder for all ML/Graph/Agent results
+│   ├── agentic_investigation_output/ <- Generated logs and investigation records
+│   ├── attack_events.csv             <- Extracted attack events log
+│   ├── attack_graph.gexf             <- NetworkX graph export format
+│   ├── event_risk_scores.csv         <- Computed anomaly and risk scores
+│   └── suspicious_flows_with_metadata.csv <- Enriched network flow metadata
+│
+├── pages/                            <- Streamlit Multi-Page UI
+│   ├── ai_investigation.py           <- Agentic interactive investigation page
+│   ├── attack_detection.py           <- Anomaly detection preview page
+│   ├── attack_graph.py               <- Interactive attack graph network page
+│   ├── incident_investigation.py     <- Event & incident details page
+│   └── risk_assessment.py            <- Triage & Risk assessment page
+│
+├── attack_graph/                     <- Attack Graph Construction Modules
+│   ├── __init__.py
+│   ├── agentic_investigator.py
+│   ├── event_builder.py
+│   ├── graph_builder.py
+│   └── if_attack_graph_pipeline.py
+│
+└── agent/                            <- LangGraph AI Agent & Core Workflows
+    ├── agent.py                      <- Main agent orchestration logic
+    ├── state.py                      <- LangGraph state definitions
+    ├── workflow.py                   <- State machine graph workflow
+    └── tools/                        <- Specialized investigation tools
+
+-------------------------------------------------------------------------------
+3. FILES TO MODIFY IF YOU CHANGE FILE/FOLDER PATHS
+-------------------------------------------------------------------------------
+If you rename folders or output CSV/GEXF files, you MUST manually update the
+path constants defined at the top of these specific files:
+
+a) `pages/attack_detection.py` & `pages/attack_graph.py`
+   - Target files in `outputs/`: `suspicious_flows_with_metadata.csv`, `attack_graph.gexf`, `attack_events.csv`
+
+b) `pages/incident_investigation.py` & `pages/risk_assessment.py`
+   - Target files: `event_risk_scores.csv`, `suspicious_flows_with_metadata.csv`
+
+c) `app.py`
+   - Path definitions pointing to root `outputs/` and `data/` directories.
+
+-------------------------------------------------------------------------------
+4. HOW TO RUN THE PROJECT
+-------------------------------------------------------------------------------
+1. Install Python 3.10+ and set up a virtual environment:
+      python -m venv venv
+      source venv/bin/activate   # On Linux/Mac
+      venv\Scripts\activate      # On Windows
+
+2. Install dependencies:
+      pip install -r requirements.txt
+
+3. Execute the Streamlit application from the root directory (`major/`):
+      streamlit run app.py
+
+-------------------------------------------------------------------------------
+5. DEVELOPER CAUTIONS & COMMON ERRORS
+-------------------------------------------------------------------------------
+- ALWAYS run `streamlit run app.py` from the project ROOT folder (`major/`),
+  NOT from within the `pages/` directory.
+- `suspicious_flows_with_metadata.csv` can be large. Preview loading uses 
+  row limits to preserve system RAM during dashboard rendering.
+- Ensure API keys are properly configured in `.env` before triggering AI pages (`ai_investigation.py`).
+===============================================================================

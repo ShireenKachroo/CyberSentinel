@@ -6,6 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # ============================================================
 # PAGE CONFIG
@@ -13,7 +16,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="CyberSentinel | SOC",
-    page_icon="🛡️",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -158,7 +161,7 @@ ROOT = Path(__file__).resolve().parent
 
 DATA_PATH = ROOT / "data" / "cleaned_cicids2017.parquet"
 
-OUTPUT_DIR = ROOT / "attack_graph_output"
+OUTPUT_DIR = ROOT / "outputs"
 
 EVENTS_PATH = OUTPUT_DIR / "attack_events.csv"
 SUSPICIOUS_PATH = OUTPUT_DIR / "suspicious_flows_with_metadata.csv"
@@ -340,7 +343,6 @@ if attack_events is None and events_df is not None:
 with st.sidebar:
 
     st.markdown("## 🛡️ CyberSentinel")
-    st.caption("ML-Based Cyber Attack Detection")
 
     st.divider()
 
@@ -363,7 +365,6 @@ with st.sidebar:
     st.page_link(
         "pages/attack_detection.py",
         label="Attack Detection",
-        
     )
 
     st.markdown(
@@ -384,7 +385,7 @@ with st.sidebar:
 
     st.markdown(
         '<div class="smallcaps" style="margin-top:18px">'
-        'Future Modules</div>',
+        'Agentic Investigation & Risk Assessment </div>',
         unsafe_allow_html=True,
     )
 
@@ -393,10 +394,10 @@ with st.sidebar:
         label="Risk Assessment",
     )
 
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    # st.page_link(
+    #     "pages/ai_investigation.py",
+    #     label="AI Investigation",
+    # )
 
     st.divider()
 
@@ -776,13 +777,13 @@ with pipeline_col:
             "05",
             "Risk Assessment",
             "Incident → risk assessment",
-            False,
+            True,
         ),
         (
             "06",
             "Agentic Investigation",
             "Evidence → investigation findings",
-            False,
+            True,
         ),
     ]
 
@@ -927,24 +928,24 @@ st.plotly_chart(
 # MID-VIVA SCOPE
 # ============================================================
 
-# FIXED: st.html
-st.html(
-    """
-    <div class="callout">
+# # FIXED: st.html
+# st.html(
+#     """
+#     <div class="callout">
 
-        <b>Mid-Viva implementation:</b>
-        The current system covers CICIDS2017 preprocessing,
-        Isolation Forest anomaly detection, suspicious-flow
-        extraction, attack-event formation and attack-graph
-        reconstruction.
+#         <b>Mid-Viva implementation:</b>
+#         The current system covers CICIDS2017 preprocessing,
+#         Isolation Forest anomaly detection, suspicious-flow
+#         extraction, attack-event formation and attack-graph
+#         reconstruction.
 
-        <br><br>
+#         <br><br>
 
-        <span class="muted">
-        Risk assessment and agentic AI investigation are retained
-        as subsequent development stages.
-        </span>
+#         <span class="muted">
+#         Risk assessment and agentic AI investigation are retained
+#         as subsequent development stages.
+#         </span>
 
-    </div>
-    """
-)
+#     </div>
+#     """
+# )

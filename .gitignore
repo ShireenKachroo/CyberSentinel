@@ -1,0 +1,13 @@
+# Virtual Environment
+venv/
+
+# Python Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment Variables & API Keys
+.env
+agentic_investigation_output/
+agentic.py
+pages/ai_investigation.py

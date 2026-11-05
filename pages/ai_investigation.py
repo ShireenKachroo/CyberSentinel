@@ -170,10 +170,10 @@ with st.sidebar:
         label="Risk Assessment",
     )
 
-    st.page_link(
-        "pages/ai_investigation.py",
-        label="AI Investigation",
-    )
+    # st.page_link(
+    #     "pages/ai_investigation.py",
+    #     label="AI Investigation",
+    # )
 
 
 # ============================================================
