@@ -1,75 +1,56 @@
 import os
-from pathlib import Path
-import pandas as pd
-from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage
 import json
+from pathlib import Path
+from dotenv import load_dotenv
 
 load_dotenv()
-from agent.workflow import create_investigation_graph
 
-def test_investigation():
-    print("Initializing investigation test...")
+if os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
+    os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
 
-    events_path = Path("outputs/attack_events.csv")
-    if not events_path.exists():
-        print(f"Error: Could not find {events_path}.")
-        return
+from agent.agent import run_investigation
+from agent.workflow import generate_report_from_json
 
-    df = pd.read_csv(events_path)
-    sample_event_id = str(df.iloc[0]['event_id'])
-    print(f"Selected sample Event ID for investigation: {sample_event_id}")
+selected_event_id = "EVT-00002"
+selected_target_ip = "192.168.10.50"
 
-    graph = create_investigation_graph()
+print("==================================================")
+print(f"Starting Investigation for Event ID: {selected_event_id}")
+print("==================================================\n")
 
-    initial_state = {
-        "event_id": sample_event_id,
-        "target_ip": None,
-        "messages": [
-            HumanMessage(content=f"Investigate event ID {sample_event_id}. Use your tools to fetch details, check related events, and provide a final summary report.")
-        ],
-        "investigation_steps": [],
-        "retrieved_evidence": {},
-        "investigation_complete": False,
-        "final_report": None
-    }
+# Step 1: Output directory setup
+output_dir = Path("outputs/agentic_investigation_output")
+output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\nStarting agentic multi-step investigation loop...")
-    print("-" * 60)
+# Step 2: Investigation run
+result = run_investigation(
+    event_id=selected_event_id,
+    target_ip=selected_target_ip
+)
 
-    config = {"recursion_limit": 15}
-    last_report_content = ""
+print("\n--- Investigation Completed ---")
 
-    for step in graph.stream(initial_state, config=config, stream_mode="updates"):
-        for node_name, output in step.items():
-            print(f"\n[Node Executed: {node_name.upper()}]")
-            if "messages" in output:
-                for msg in output["messages"]:
-                    if hasattr(msg, "tool_calls") and msg.tool_calls:
-                        for tc in msg.tool_calls:
-                            print(f"Agent calling tool: '{tc['name']}' with args: {tc['args']}")
-                    elif hasattr(msg, "content") and msg.content:
-                        content_text = msg.content
-                        print(f"LLM Output / Summary:\n{content_text}")
-                        # Capture the latest substantive LLM response as the report
-                        if len(content_text) > 100:
-                            last_report_content = content_text
+final_messages = result.get("messages", [])
+if final_messages:
+    raw_content = final_messages[-1].content
+    if isinstance(raw_content, list):
+        investigation_json_str = "".join([str(item) for item in raw_content])
+    else:
+        investigation_json_str = str(raw_content)
 
-    # Automatically save report if generated
-    if last_report_content:
-        output_dir = Path("agentic_investigation_output")
-        output_dir.mkdir(parents=True, exist_ok=True)
+    # 1. JSON file save kar rahe hain
+    json_file_path = output_dir / f"investigation_{selected_event_id}.json"
+    with open(json_file_path, "w", encoding="utf-8") as f:
+        f.write(investigation_json_str)
+    print(f"✅ Raw Investigation JSON saved to: {json_file_path}")
 
-        md_path = output_dir / f"agentic_investigation_{sample_event_id}.md"
-        md_path.write_text(last_report_content, encoding="utf-8")
+    # 2. Markdown Report generate karke save kar rahe hain
+    print("⏳ Generating Professional Markdown Report...")
+    markdown_report = generate_report_from_json(investigation_json_str)
 
-        json_path = output_dir / f"agentic_investigation_{sample_event_id}.json"
-        json_path.write_text(json.dumps({"event_id": sample_event_id, "report": last_report_content}, indent=2), encoding="utf-8")
+    md_file_path = output_dir / f"report_{selected_event_id}.md"
+    with open(md_file_path, "w", encoding="utf-8") as f:
+        f.write(markdown_report)
+    print(f"✅ Professional SOC Report saved to: {md_file_path}")
 
-        print(f"\nReport successfully saved to:\n- {md_path}\n- {json_path}")
-
-    print("\n" + "=" * 60)
-    print("Investigation test finished successfully!")
-
-if __name__ == "__main__":
-    test_investigation()
+print("\n🎉 Output files successfully generated in folder!")
