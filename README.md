@@ -414,7 +414,7 @@ Follow the steps below to set up the project locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone [<repository-url>](https://github.com/ShireenKachroo/CyberSentinel.git)
 ```
 
 Navigate to the project directory:
