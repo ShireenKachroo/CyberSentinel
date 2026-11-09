@@ -23,6 +23,7 @@ An intelligent cybersecurity monitoring and investigation system that combines *
 - [Installation and Setup](#installation-and-setup)
 - [Running the Application](#running-the-application)
 - [Evaluation and Performance](#evaluation-and-performance)
+- [UI Overview](#ui-overview)
 - [Future Scope](#future-scope)
 - [Limitations](#limitations)
 
@@ -81,41 +82,7 @@ The system follows a multi-stage architecture in which the output of one stage s
 
 ### High-Level Workflow
 
-```text
-              CICIDS2017 Dataset
-                      |
-                      v
-              Data Preprocessing
-                      |
-                      v
-              Cleaned Network Flows
-                      |
-                      v
-              Isolation Forest
-              Anomaly Detection
-                      |
-                      v
-              Suspicious Network Flows
-                      |
-                      v
-              Attack Event Generation
-                      |
-                      v
-              Attack Graph Construction
-                      |
-                      v
-                Risk Assessment
-                      |
-                      v
-              Agentic AI Investigation
-                      |
-                      v
-          Evidence-Based Investigation
-                 and Analysis
-                      |
-                      v
-             Streamlit Dashboard
-```
+<img width="587" height="687" alt="image" src="https://github.com/user-attachments/assets/52493e5b-7726-41e3-b52a-ffed293844e0" />
 
 The dashboard provides separate interfaces for exploring the outputs of the different stages, including anomaly detection, incident investigation, attack graph visualization, risk assessment, and AI-assisted investigation.
 
@@ -414,7 +381,7 @@ Follow the steps below to set up the project locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone [<repository-url>](https://github.com/ShireenKachroo/CyberSentinel.git)
+git clone https://github.com/ShireenKachroo/CyberSentinel.git
 ```
 
 Navigate to the project directory:
