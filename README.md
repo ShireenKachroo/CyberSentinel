@@ -522,7 +522,6 @@ The overall system also produces event-level outputs, graph representations, ris
 <img width="1143" height="821" alt="image" src="https://github.com/user-attachments/assets/0a14b39a-07e8-492c-a3f9-cca26aebcd2c" />
 <img width="1917" height="786" alt="image" src="https://github.com/user-attachments/assets/6f21c8ab-d88b-4ccf-889e-d0bf85dd6f44" />
 <img width="1912" height="717" alt="image" src="https://github.com/user-attachments/assets/72e5c65f-722d-4a48-94f5-8fae7038cc57" />
-<img width="1912" height="717" alt="image" src="https://github.com/user-attachments/assets/3f5ebdf1-1f4b-49de-8875-a6b59f4d6af9" />
 
 ---
 
