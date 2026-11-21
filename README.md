@@ -512,6 +512,8 @@ These results provide an initial evaluation of the anomaly detection component.
 
 The overall system also produces event-level outputs, graph representations, risk scores, and AI-generated investigation records to support subsequent stages of security analysis.
 
+The agentic analysis and incident report generation workflow runs in **under 2 minutes**.
+
 ---
 
 ## UI Overview
