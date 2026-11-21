@@ -81,8 +81,7 @@ The primary objectives of the project are:
 The system follows a multi-stage architecture in which the output of one stage serves as the input to subsequent stages.
 
 ### High-Level Workflow
-
-<img width="587" height="687" alt="image" src="https://github.com/user-attachments/assets/52493e5b-7726-41e3-b52a-ffed293844e0" />
+<img width="2685" height="4096" alt="image" src="https://github.com/user-attachments/assets/53a472d8-9762-44d5-b24a-ea22baab5bde" />
 
 The dashboard provides separate interfaces for exploring the outputs of the different stages, including anomaly detection, incident investigation, attack graph visualization, risk assessment, and AI-assisted investigation.
 
@@ -257,6 +256,8 @@ The risk assessment module also provides an interactive interface for exploring 
 The agentic investigation component introduces an AI-powered investigation workflow to assist in understanding suspicious security incidents.
 It is implemented using **LangGraph**, which provides a structured way to orchestrate an agent's execution through defined states, workflow nodes, and transitions.
 Rather than relying on a single LLM prompt to interpret an entire incident, the system uses specialized investigation tools to retrieve relevant information and support evidence-based analysis.
+
+<img width="3030" height="2070" alt="image" src="https://github.com/user-attachments/assets/be183fbf-1588-48ad-ae75-8fd29882ab4c" />
 
 #### Agent Architecture
 
